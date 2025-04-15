@@ -69,8 +69,8 @@ View complete details of past summaries, including full analysis and key points.
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
-cd 
+git clone(https://github.com/sumit7366/AI-Transcript-Generator.git)
+cd AI-Transcript-Generator
 ```
 
 2. Install dependencies:
@@ -106,13 +106,13 @@ yarn dev
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
-cd <folder name >
+git clone(https://github.com/sumit7366/AI-Transcript-Generator.git)
+cd AI-Transcript-Generator
 ```
 
 2. Build the Docker image:
 ```bash
-docker build -t <folder name >.
+docker build -t AI-Transcript-Generator.
 ```
 
 3. Run the container:
