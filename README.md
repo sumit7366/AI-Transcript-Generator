@@ -54,22 +54,6 @@ Access your previously generated summaries through the history dashboard, showin
 ![Summary History Detail](5.png)
 View complete details of past summaries, including full analysis and key points.
 
-### 1. Home Screen
-![Home Screen](1.png)
-
-### 2. Generation Process
-![Generating Summary](2.png)
-
-### 3. Summary View
-![Video Summary](3.png)
-
-### 4. History Dashboard
-![Summary History Dashboard](4.png)
-
-### 5. Detailed History View
-![Summary History Detail](5.png)
-
-
 ## 🚀 Getting Started
 
 ### Prerequisites
