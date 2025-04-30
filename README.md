@@ -76,6 +76,7 @@ View complete details of past summaries, including full analysis and key points.
 
 ### Installation
 
+
 #### Option 1: Local Installation
 
 1. Clone the repository:
