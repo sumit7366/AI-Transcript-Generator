@@ -22,7 +22,6 @@ interface PageProps {
 }
 
 async function fetchSummary(id: string): Promise<Summary | null> {
-  // Server side fetch, you can call your own API or DB here
   const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/history/${id}`, {
     cache: "no-store",
   })
@@ -34,14 +33,11 @@ async function fetchSummary(id: string): Promise<Summary | null> {
 }
 
 export default async function HistoryDetailPage({ params }: PageProps) {
-  // params is NOT a Promise here, but the typing on Vercel build expects it so
-  // workaround: Next 13 expects `async` component and fetch inside it, so it's fine
-
   const { id } = params
   const summary = await fetchSummary(id)
 
   if (!summary) {
-    notFound() // Next.js 13 built-in 404
+    notFound()
   }
 
   const formatDate = (dateString: string) => {
@@ -61,8 +57,6 @@ export default async function HistoryDetailPage({ params }: PageProps) {
 
   const videoUrl = `https://www.youtube.com/watch?v=${summary.videoId}`
 
-  export default async function Page({ params }: PageProps) {
-  const { id } = params;
   return (
     <Card>
       <CardHeader>
