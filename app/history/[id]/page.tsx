@@ -1,4 +1,3 @@
-// app/history/[id]/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -9,14 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft, Youtube, Clock, Globe, Download } from "lucide-react"
-import ReactMarkdown from "react-markdown"
-
-// Correct type for route params
-type PageProps = {
-  params: {
-    id: string
-  }
-}
+import { use } from "react"
+import ReactMarkdown from 'react-markdown'
 
 interface Summary {
   id: string
@@ -27,24 +20,31 @@ interface Summary {
   createdAt: string
 }
 
+interface PageProps {
+  params: Promise<{ id: string }>
+}
+
 export default function HistoryDetailPage({ params }: PageProps) {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
   const router = useRouter()
-  const { id } = params
+  const { id } = use(params)
 
   useEffect(() => {
     const fetchSummary = async () => {
       try {
         setLoading(true)
-        const res = await fetch(`/api/history/${id}`)
-        if (!res.ok) throw new Error("Failed to fetch data")
-        const data = await res.json()
+        setError(null)
+
+        const response = await fetch(`/api/history/${id}`)
+        if (!response.ok) {
+          throw new Error("Failed to fetch summary")
+        }
+        const data = await response.json()
         setSummary(data.summary)
-      } catch (err: any) {
-        setError(err.message)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load summary")
       } finally {
         setLoading(false)
       }
@@ -54,7 +54,13 @@ export default function HistoryDetailPage({ params }: PageProps) {
   }, [id])
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
+    return new Date(dateString).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
   }
 
   const getLanguageDisplay = (code: string) => {
@@ -62,9 +68,37 @@ export default function HistoryDetailPage({ params }: PageProps) {
     return entry ? entry[0] : code
   }
 
+  const formatContent = (content: string) => {
+    // Split content into sections based on headers
+    const sections = content.split(/(<h[1-6].*?<\/h[1-6]>)/)
+
+    return sections.map((section, index) => {
+      if (section.startsWith("<h")) {
+        // It's a header, wrap it in a div with margin
+        return (
+          <div key={index} className="mt-6 mb-3 first:mt-0">
+            <div dangerouslySetInnerHTML={{ __html: section }} />
+          </div>
+        )
+      } else {
+        // It's a content section, split into paragraphs
+        const paragraphs = section.split("\n").filter((p) => p.trim() !== "")
+        return (
+          <div key={index} className="space-y-4">
+            {paragraphs.map((paragraph, pIndex) => (
+              <p key={pIndex} className="text-gray-700 dark:text-gray-300">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        )
+      }
+    })
+  }
+
   const downloadSummary = () => {
     const text = summary?.content ?? ""
-    const blob = new Blob([text], { type: "text/plain" })
+    const blob = new Blob([text], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
@@ -93,9 +127,7 @@ export default function HistoryDetailPage({ params }: PageProps) {
     return (
       <Card>
         <CardContent>
-          <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md">
-            {error || "Summary not found"}
-          </div>
+          <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md">{error || "Summary not found"}</div>
         </CardContent>
       </Card>
     )
