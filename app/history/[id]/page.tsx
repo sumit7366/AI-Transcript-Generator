@@ -16,7 +16,9 @@ interface Summary {
 }
 
 interface PageProps {
-  params: { id: string }
+  params: {
+    id: string;
+  };
 }
 
 async function fetchSummary(id: string): Promise<Summary | null> {
@@ -59,6 +61,8 @@ export default async function HistoryDetailPage({ params }: PageProps) {
 
   const videoUrl = `https://www.youtube.com/watch?v=${summary.videoId}`
 
+  export default async function Page({ params }: PageProps) {
+  const { id } = params;
   return (
     <Card>
       <CardHeader>
