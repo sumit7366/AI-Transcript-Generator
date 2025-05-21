@@ -1,10 +1,14 @@
-import { notFound } from "next/navigation"
-import ReactMarkdown from "react-markdown"
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AVAILABLE_LANGUAGES } from "@/lib/youtube"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft, Youtube, Clock, Globe, Download } from "lucide-react"
+import ReactMarkdown from "react-markdown"
 
 interface Summary {
   id: string
@@ -16,29 +20,37 @@ interface Summary {
 }
 
 interface PageProps {
-  params: {
-    id: string;
-  };
+  params: { id: string }  // corrected type here (no Promise)
 }
 
-async function fetchSummary(id: string): Promise<Summary | null> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/history/${id}`, {
-    cache: "no-store",
-  })
+export default function HistoryDetailPage({ params }: PageProps) {
+  const [summary, setSummary] = useState<Summary | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+  const { id } = params  // destructure directly
 
-  if (!res.ok) return null
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        setLoading(true)
+        setError(null)
 
-  const data = await res.json()
-  return data.summary ?? null
-}
+        const response = await fetch(`/api/history/${id}`)
+        if (!response.ok) {
+          throw new Error("Failed to fetch summary")
+        }
+        const data = await response.json()
+        setSummary(data.summary)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load summary")
+      } finally {
+        setLoading(false)
+      }
+    }
 
-export default async function HistoryDetailPage({ params }: PageProps) {
-  const { id } = params
-  const summary = await fetchSummary(id)
-
-  if (!summary) {
-    notFound()
-  }
+    fetchSummary()
+  }, [id])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(undefined, {
@@ -55,12 +67,49 @@ export default async function HistoryDetailPage({ params }: PageProps) {
     return entry ? entry[0] : code
   }
 
+  const downloadSummary = () => {
+    const text = summary?.content ?? ""
+    const blob = new Blob([text], { type: "text/plain" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `${summary?.title}.txt`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-8 w-3/4 mb-2" />
+          <Skeleton className="h-4 w-1/2" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-3/4" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error || !summary) {
+    return (
+      <Card>
+        <CardContent>
+          <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md">{error || "Summary not found"}</div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const videoUrl = `https://www.youtube.com/watch?v=${summary.videoId}`
 
   return (
     <Card>
       <CardHeader>
-        <Button variant="ghost" onClick={() => window.history.back()} className="mb-4 p-0 h-auto font-normal">
+        <Button variant="ghost" onClick={() => router.push("/history")} className="mb-4 p-0 h-auto font-normal">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to History
         </Button>
@@ -81,20 +130,7 @@ export default async function HistoryDetailPage({ params }: PageProps) {
                 Watch on YouTube
               </a>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const blob = new Blob([summary.content], { type: "text/plain" })
-                const url = URL.createObjectURL(blob)
-                const link = document.createElement("a")
-                link.href = url
-                link.download = `${summary.title}.txt`
-                link.click()
-                URL.revokeObjectURL(url)
-              }}
-              className="flex items-center mt-2"
-            >
+            <Button variant="outline" size="sm" onClick={downloadSummary} className="flex items-center mt-2">
               <Download className="mr-1 h-3 w-3" />
               Download Summary
             </Button>
