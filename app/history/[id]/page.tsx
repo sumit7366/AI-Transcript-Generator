@@ -1,3 +1,4 @@
+// app/history/[id]/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -10,6 +11,13 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft, Youtube, Clock, Globe, Download } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 
+// Correct type for route params
+type PageProps = {
+  params: {
+    id: string
+  }
+}
+
 interface Summary {
   id: string
   videoId: string
@@ -19,31 +27,24 @@ interface Summary {
   createdAt: string
 }
 
-interface PageProps {
-  params: { id: string }  // corrected type here (no Promise)
-}
-
 export default function HistoryDetailPage({ params }: PageProps) {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
   const router = useRouter()
-  const { id } = params  // destructure directly
+  const { id } = params
 
   useEffect(() => {
     const fetchSummary = async () => {
       try {
         setLoading(true)
-        setError(null)
-
-        const response = await fetch(`/api/history/${id}`)
-        if (!response.ok) {
-          throw new Error("Failed to fetch summary")
-        }
-        const data = await response.json()
+        const res = await fetch(`/api/history/${id}`)
+        if (!res.ok) throw new Error("Failed to fetch data")
+        const data = await res.json()
         setSummary(data.summary)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load summary")
+      } catch (err: any) {
+        setError(err.message)
       } finally {
         setLoading(false)
       }
@@ -53,13 +54,7 @@ export default function HistoryDetailPage({ params }: PageProps) {
   }, [id])
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
+    return new Date(dateString).toLocaleString()
   }
 
   const getLanguageDisplay = (code: string) => {
@@ -98,7 +93,9 @@ export default function HistoryDetailPage({ params }: PageProps) {
     return (
       <Card>
         <CardContent>
-          <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md">{error || "Summary not found"}</div>
+          <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md">
+            {error || "Summary not found"}
+          </div>
         </CardContent>
       </Card>
     )
