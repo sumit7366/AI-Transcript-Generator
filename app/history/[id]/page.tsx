@@ -1,14 +1,13 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { AVAILABLE_LANGUAGES } from "@/lib/youtube"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowLeft, Youtube, Clock, Globe, Download } from "lucide-react"
-import { use } from "react"
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { AVAILABLE_LANGUAGES } from '@/lib/youtube'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ArrowLeft, Youtube, Clock, Globe, Download } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 
 interface Summary {
@@ -21,7 +20,7 @@ interface Summary {
 }
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }
 
 export default function HistoryDetailPage({ params }: PageProps) {
@@ -29,7 +28,7 @@ export default function HistoryDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const { id } = use(params)
+  const id = params.id
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -39,12 +38,12 @@ export default function HistoryDetailPage({ params }: PageProps) {
 
         const response = await fetch(`/api/history/${id}`)
         if (!response.ok) {
-          throw new Error("Failed to fetch summary")
+          throw new Error('Failed to fetch summary')
         }
         const data = await response.json()
         setSummary(data.summary)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load summary")
+        setError(err instanceof Error ? err.message : 'Failed to load summary')
       } finally {
         setLoading(false)
       }
@@ -55,11 +54,11 @@ export default function HistoryDetailPage({ params }: PageProps) {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     })
   }
 
@@ -69,20 +68,17 @@ export default function HistoryDetailPage({ params }: PageProps) {
   }
 
   const formatContent = (content: string) => {
-    // Split content into sections based on headers
     const sections = content.split(/(<h[1-6].*?<\/h[1-6]>)/)
 
     return sections.map((section, index) => {
-      if (section.startsWith("<h")) {
-        // It's a header, wrap it in a div with margin
+      if (section.startsWith('<h')) {
         return (
           <div key={index} className="mt-6 mb-3 first:mt-0">
             <div dangerouslySetInnerHTML={{ __html: section }} />
           </div>
         )
       } else {
-        // It's a content section, split into paragraphs
-        const paragraphs = section.split("\n").filter((p) => p.trim() !== "")
+        const paragraphs = section.split('\n').filter((p) => p.trim() !== '')
         return (
           <div key={index} className="space-y-4">
             {paragraphs.map((paragraph, pIndex) => (
@@ -97,10 +93,10 @@ export default function HistoryDetailPage({ params }: PageProps) {
   }
 
   const downloadSummary = () => {
-    const text = summary?.content ?? ""
+    const text = summary?.content ?? ''
     const blob = new Blob([text], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
+    const link = document.createElement('a')
     link.href = url
     link.download = `${summary?.title}.txt`
     link.click()
@@ -127,7 +123,9 @@ export default function HistoryDetailPage({ params }: PageProps) {
     return (
       <Card>
         <CardContent>
-          <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md">{error || "Summary not found"}</div>
+          <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md">
+            {error || 'Summary not found'}
+          </div>
         </CardContent>
       </Card>
     )
@@ -138,7 +136,7 @@ export default function HistoryDetailPage({ params }: PageProps) {
   return (
     <Card>
       <CardHeader>
-        <Button variant="ghost" onClick={() => router.push("/history")} className="mb-4 p-0 h-auto font-normal">
+        <Button variant="ghost" onClick={() => router.push('/history')} className="mb-4 p-0 h-auto font-normal">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to History
         </Button>
@@ -159,17 +157,15 @@ export default function HistoryDetailPage({ params }: PageProps) {
                 Watch on YouTube
               </a>
             </Button>
-            <Button variant="outline" size="sm" onClick={downloadSummary} className="flex items-center mt-2">
+            <Button variant="outline" size="sm" onClick={downloadSummary} className="flex items-center">
               <Download className="mr-1 h-3 w-3" />
               Download Summary
             </Button>
           </div>
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="prose prose-sm sm:prose lg:prose-lg max-w-none dark:prose-invert">
-          <ReactMarkdown>{summary.content}</ReactMarkdown>
-        </div>
+      <CardContent className="mt-6">
+        {formatContent(summary.content)}
       </CardContent>
     </Card>
   )
